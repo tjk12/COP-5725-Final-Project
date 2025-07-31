@@ -41,7 +41,7 @@ This project was developed for COP 5725: Database Systems to demonstrate the ful
 
 ## PHASE 1 AND 2
 
-![alt text](p12.png "Phase 1 and 2")
+![alt text](ERD_Diagram_Revised.png "Phase 1 and 2")
 
 -----
 
@@ -58,7 +58,7 @@ The Pilot entity is related to the CrewMember entity, the Aircraft entity, and F
 - **Salary**: This stores our pilot’s salaries and is optional.
 - **PhoneNumber**: This is a required attribute for the pilot’s phone number since we need to contact our pilots for scheduling.
 - **LicenseNumber**: This is a required attribute storing the pilot’s aviation license number.
-- **FlightHours**: This tracks the total flight hours accumulated by the pilot.
+- **FlightHours**: This required attribute tracks the total flight hours accumulated by the pilot.
 
 The Pilot entity has a (one mandatory to mandatory many) relationship with the CrewMember entity, which is also a supertype entity. The Pilot entity has a (many mandatory to one mandatory) relationship with the Aircraft entity for aircraft assignments. It also has a (many mandatory to one mandatory) relationship with the Flight entity.
 
