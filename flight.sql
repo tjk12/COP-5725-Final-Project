@@ -97,15 +97,17 @@ CREATE TABLE Aircraft (
     Capacity SMALLINT UNSIGNED NOT NULL,
     Status VARCHAR(20) NOT NULL,
     LastMaintenanceDate DATE,
-    YearManufactured YEAR NOT NULL
+    YearManufactured YEAR NOT NULL,
+    AirlineID SMALLINT UNSIGNED,
+    FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID)
 );
 
 INSERT INTO Aircraft VALUES 
-(201, 'Boeing 737-800', 'Boeing', 162, 'Active', '2024-11-15', 2018),
-(202, 'Airbus A320', 'Airbus', 156, 'Active', '2024-12-01', 2019),
-(203, 'Boeing 777-200', 'Boeing', 314, 'Maintenance', '2024-10-20', 2017),
-(204, 'Airbus A330', 'Airbus', 277, 'Active', '2024-11-28', 2020),
-(205, 'Boeing 787-9', 'Boeing', 290, 'Active', '2024-12-10', 2021);
+(201, 'Boeing 737-800', 'Boeing', 162, 'Active', '2024-11-15', 2018, 1),
+(202, 'Airbus A320', 'Airbus', 156, 'Active', '2024-12-01', 2019, 2),
+(203, 'Boeing 777-200', 'Boeing', 314, 'Maintenance', '2024-10-20', 2017, 1),
+(204, 'Airbus A330', 'Airbus', 277, 'Active', '2024-11-28', 2020, 3),
+(205, 'Boeing 787-9', 'Boeing', 290, 'Active', '2024-12-10', 2021, 2);
 
 
 CREATE TABLE FlightAttendant (
