@@ -1,6 +1,7 @@
 # FLIGHT MANAGEMENT DATABASE SYSTEMS PROJECT
 
 **GROUP MEMBERS:** Derrek Dunn, Alex Miller, Stephen Railing, Trever Knie
+
 **COP 5725: DATABASE SYSTEMS Group PROJECT**
 
 -----
@@ -41,7 +42,7 @@ This project was developed for COP 5725: Database Systems to demonstrate the ful
 
 ## PHASE 1 AND 2
 
-![alt text](p12.png "Phase 1 and 2")
+![alt text](ERD_Diagram_Revised.png "Phase 1 and 2")
 
 -----
 
@@ -58,7 +59,7 @@ The Pilot entity is related to the CrewMember entity, the Aircraft entity, and F
 - **Salary**: This stores our pilot’s salaries and is optional.
 - **PhoneNumber**: This is a required attribute for the pilot’s phone number since we need to contact our pilots for scheduling.
 - **LicenseNumber**: This is a required attribute storing the pilot’s aviation license number.
-- **FlightHours**: This tracks the total flight hours accumulated by the pilot.
+- **FlightHours**: This required attribute tracks the total flight hours accumulated by the pilot.
 
 The Pilot entity has a (one mandatory to mandatory many) relationship with the CrewMember entity, which is also a supertype entity. The Pilot entity has a (many mandatory to one mandatory) relationship with the Aircraft entity for aircraft assignments. It also has a (many mandatory to one mandatory) relationship with the Flight entity.
 
@@ -80,6 +81,10 @@ The Pilot entity has a (one mandatory to mandatory many) relationship with the C
 |Passenger and Luggage   |One to Many (1:N) |One passenger can have multiple luggage items            |
 |Flight and Route        |Many to One (N:1) |Many flights can follow the same route                   |
 |Airport and Route       |Many to One (N:1) |Many routes can originate from one airport               |
+|Aircraft and Airline    |Many to One (N:1) |Many aircraft can be owned by one airline                |
+|Airline and Flight      |One to Many (1:N) |One airline can operate many flights                     |
+|Airline and CrewMember  |One to Many (1:N) |One ariline can employ many crew members                 |
+
 
 #### Participation Ratio Table
 
@@ -95,6 +100,10 @@ The Pilot entity has a (one mandatory to mandatory many) relationship with the C
 |CrewMember and Flight   |Total/Mandatory (1), Total/Mandatory (1) |Each flight must have crew members and crew members must be assigned to flights                            |
 |Passenger and Luggage   |Total/Mandatory (1), Partial/Optional (0)|Each luggage item must belong to a passenger, but passengers may travel without checked luggage            |
 |Flight and Route        |Total/Mandatory (1), Total/Mandatory (1) |Each flight must follow a route and routes exist to be flown                                               |
+|Aircraft and Airline    |Total/Mandatory (1), Total/Mandatory (1) |Each aircraft must be owned by exactly one airline                                                         |
+|Airline and Flight		 |Total/Mandatory (1), Total/Mandatory (1) |Each flight is operated by one airline, but an airline may have many flights				               |
+|Airline and CrewMember  |Total/Mandatory (1), Total/Mandatory (1) |Each airline can have many crew members as employees                                                       |
+
 
 ### STRONG AND WEAK ENTITIES
 
@@ -105,6 +114,8 @@ There is an identifying relationship between Passenger and Booking, as well as b
 Pilots in our airline are specialized crew members, making the Pilot entity a subtype of the CrewMember entity (supertype). The primary key of the CrewMember table becomes the primary key of the Pilot table as well as a foreign key.
 
 Flight attendants are also specialized crew members, making FlightAttendant entity another subtype of CrewMember entity. The primary key of the CrewMember table becomes the primary key of the FlightAttendant table as well as a foreign key.
+
+As a business rule, we decided to allow a CrewMember to be both a Pilot and a FlightAttendant, although this may be rare in practice.
 
 ### TABLE AND COLUMNS CONSTRAINTS
 
@@ -125,13 +136,17 @@ Flight attendants are also specialized crew members, making FlightAttendant enti
 
 #### Aircraft Table
 
-- **Table Constraint**: Primary Key (AircraftID)
+- **Table Constraint**: Primary Key (AircraftID), Foreign Key (AirlineID)
 - **Column Constraint**: Not Null (Model, Manufacturer, Capacity, Status)
 
 #### Airport Table
 
 - **Table Constraint**: Primary Key (AirportID)
 - **Column Constraint**: Not Null (AirportName, City, Country, AirportCode), Unique (AirportCode)
+
+#### Airline Table
+- **Table Constraint**: Primary Key (AirlineID)
+- **Column Constraint**: Not Null (Name, Address)
 
 #### Passenger Table
 
@@ -155,12 +170,12 @@ Flight attendants are also specialized crew members, making FlightAttendant enti
 
 #### Maintenance Table
 
-- **Table Constraint**: Primary Key (MaintenanceID, AircraftID), Foreign Key (AircraftID) [On Delete Cascade On Update Cascade]
+- **Table Constraint**: Primary Key (MaintenanceID), Foreign Key (AircraftID) [On Delete Cascade On Update Cascade]
 - **Column Constraint**: Not Null (MaintenanceDate, MaintenanceType, Cost, TechnicianName)
 
 #### Luggage Table
 
-- **Table Constraint**: Primary Key (LuggageID), Foreign Key (PassengerID, BookingID) [On Delete Cascade On Update Cascade]
+- **Table Constraint**: Primary Key (PassengerID, BookingID), Foreign Key (PassengerID, BookingID) [On Delete Cascade On Update Cascade]
 - **Column Constraint**: Not Null (Weight, LuggageType)
 
 #### FlightCrew Table (Junction Table)
@@ -222,6 +237,41 @@ INSERT INTO Airport VALUES
 (104, 'Charles de Gaulle Airport', 'Paris', 'France', 'CDG', 'CET'),
 (105, 'Tokyo Haneda Airport', 'Tokyo', 'Japan', 'HND', 'JST');
 ```
+
+#### Airline table
+
+**Table Creation**
+
+```sql
+CREATE TABLE Airline (
+    AirlineID SMALLINT UNSIGNED PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    Address VARCHAR(100) NOT NULL,
+);
+```
+
+**Table Description**
+This table stores information about airports in our airline network. Each airport has a unique identifier and internationally recognized airport code.
+
+- **AirlineID**: Small unsigned integer serving as primary key for unique identification
+- **Name**: Full name of the airline (up to 100 characters)
+- **Address**: Address of the airport
+
+
+**Values Insertion**
+````sql
+INSERT INTO Airline (AirlineID, Name, Address) VALUES 
+(1, 'American Airlines', '1 Skyview Dr, Fort Worth, TX 76155'),
+(2, 'Delta Air Lines', '1030 Delta Blvd, Atlanta, GA 30354'),
+(3, 'United Airlines', '233 S. Wacker Dr, Chicago, IL 60606'),
+(4, 'Southwest Airlines', '2702 Love Field Dr, Dallas, TX 75235'),
+(5, 'JetBlue Airways', '27-01 Queens Plaza N, Long Island City, NY 11101'),
+(6, 'Alaska Airlines', '19300 International Blvd, Seattle, WA 98188'),
+(7, 'Spirit Airlines', '2800 Executive Way, Miramar, FL 33025'),
+(8, 'Frontier Airlines', '4545 Airport Way, Denver, CO 80239'),
+(9, 'Allegiant Air', '1201 N Town Center Dr, Las Vegas, NV 89144'),
+(10, 'Hawaiian Airlines', '3375 Koapaka St, Honolulu, HI 96819');
+````
 
 #### Aircraft Table
 
@@ -293,11 +343,16 @@ Stores information about all crew members including pilots, flight attendants, a
 
 ```sql
 INSERT INTO CrewMember VALUES 
-(301, 'Captain James Mitchell', '555-123-4567', 'j.mitchell@airline.com', '2015-03-15', 125000.00, 'Captain'),
-(302, 'First Officer Sarah Chen', '555-234-5678', 's.chen@airline.com', '2018-07-20', 85000.00, 'First Officer'),
-(303, 'Flight Attendant Maria Rodriguez', '555-345-6789', 'm.rodriguez@airline.com', '2019-02-10', 45000.00, 'Senior Flight Attendant'),
-(304, 'Captain Robert Wilson', '555-456-7890', 'r.wilson@airline.com', '2012-09-05', 130000.00, 'Captain'),
-(305, 'Flight Attendant Kevin Park', '555-567-8901', 'k.park@airline.com', '2020-11-12', 42000.00, 'Flight Attendant');
+(301, 'Captain James Mitchell', '555-123-4567',
+ 'j.mitchell@airline.com', '2015-03-15', 125000.00, 'Captain'),
+(302, 'First Officer Sarah Chen', '555-234-5678',
+ 's.chen@airline.com', '2018-07-20', 85000.00, 'First Officer'),
+(303, 'Flight Attendant Maria Rodriguez', '555-345-6789',
+ 'm.rodriguez@airline.com', '2019-02-10', 45000.00, 'Senior Flight Attendant'),
+(304, 'Captain Robert Wilson', '555-456-7890',
+ 'r.wilson@airline.com', '2012-09-05', 130000.00, 'Captain'),
+(305, 'Flight Attendant Kevin Park', '555-567-8901',
+ 'k.park@airline.com', '2020-11-12', 42000.00, 'Flight Attendant');
 ```
 
 #### Pilot Table
@@ -398,11 +453,16 @@ Stores passenger information for booking and identification purposes.
 
 ```sql
 INSERT INTO Passenger VALUES 
-(401, 'John Anderson', 'john.anderson@email.com', '555-111-2222', '1985-04-12', 'US123456789', 'American'),
-(402, 'Lisa Wang', 'lisa.wang@email.com', '555-222-3333', '1990-08-25', 'CN987654321', 'Chinese'),
-(403, 'Pierre Dubois', 'pierre.dubois@email.com', '555-333-4444', '1978-12-03', 'FR456789123', 'French'),
-(404, 'Emma Thompson', 'emma.thompson@email.com', '555-444-5555', '1992-06-18', 'UK789123456', 'British'),
-(405, 'Carlos Rivera', 'carlos.rivera@email.com', '555-555-6666', '1988-09-30', 'MX321654987', 'Mexican');
+(401, 'John Anderson', 'john.anderson@email.com', '555-111-2222',
+ '1985-04-12', 'US123456789', 'American'),
+(402, 'Lisa Wang', 'lisa.wang@email.com', '555-222-3333',
+ '1990-08-25', 'CN987654321', 'Chinese'),
+(403, 'Pierre Dubois', 'pierre.dubois@email.com', '555-333-4444',
+ '1978-12-03', 'FR456789123', 'French'),
+(404, 'Emma Thompson', 'emma.thompson@email.com', '555-444-5555',
+ '1992-06-18', 'UK789123456', 'British'),
+(405, 'Carlos Rivera', 'carlos.rivera@email.com', '555-555-6666',
+ '1988-09-30', 'MX321654987', 'Mexican');
 ```
 
 #### Route Table
@@ -455,6 +515,7 @@ CREATE TABLE Flight (
     FlightNumber VARCHAR(10) NOT NULL UNIQUE,
     AircraftID SMALLINT UNSIGNED NOT NULL,
     RouteID SMALLINT UNSIGNED NOT NULL,
+    AirlineID SMALLINT UNSIGNED NOT NULL,
     DepartureTime DATETIME NOT NULL,
     ArrivalTime DATETIME NOT NULL,
     Status VARCHAR(20) NOT NULL DEFAULT 'Scheduled',
@@ -462,6 +523,8 @@ CREATE TABLE Flight (
     FOREIGN KEY (AircraftID) REFERENCES Aircraft(AircraftID) 
         ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (RouteID) REFERENCES Route(RouteID) 
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID)
         ON DELETE RESTRICT ON UPDATE CASCADE,
     CHECK (ArrivalTime > DepartureTime)
 );
@@ -483,11 +546,16 @@ Represents scheduled flights with timing, aircraft, and route information.
 
 ```sql
 INSERT INTO Flight VALUES 
-(601, 'AA101', 201, 501, '2024-12-20 08:00:00', '2024-12-20 14:00:00', 'Scheduled', 'A12'),
-(602, 'AA102', 202, 502, '2024-12-21 15:30:00', '2024-12-22 03:00:00', 'Scheduled', 'B7'),
-(603, 'AA103', 204, 503, '2024-12-22 09:15:00', '2024-12-22 10:30:00', 'Scheduled', 'C3'),
-(604, 'AA104', 205, 504, '2024-12-23 11:00:00', '2024-12-24 23:45:00', 'Scheduled', 'D15'),
-(605, 'AA105', 203, 505, '2024-12-24 20:30:00', '2024-12-25 04:00:00', 'Delayed', 'A8');
+(601, 'AA101', 201, 501, 1, '2024-12-20 08:00:00',
+ '2024-12-20 14:00:00', 'Scheduled', 'A12'),
+(602, 'DL202', 202, 502, 2, '2024-12-21 15:30:00',
+ '2024-12-22 03:00:00', 'Scheduled', 'B7'),
+(603, 'UA303', 204, 503, 3, '2024-12-22 09:15:00',
+ '2024-12-22 10:30:00', 'Scheduled', 'C3'),
+(604, 'SW404', 205, 504, 4, '2024-12-23 11:00:00',
+ '2024-12-24 23:45:00', 'Scheduled', 'D15'),
+(605, 'JB505', 203, 505, 5, '2024-12-24 20:30:00',
+ '2024-12-25 04:00:00', 'Delayed', 'A8');
 ```
 
 #### Booking Table
@@ -528,11 +596,16 @@ Records passenger bookings for specific flights with seat assignments and pricin
 
 ```sql
 INSERT INTO Booking VALUES 
-('BK001', 401, 601, '2024-11-15 10:30:00', '12A', 'Economy', 450.00, 'Confirmed'),
-('BK002', 402, 602, '2024-11-20 14:15:00', '3B', 'Business', 1200.00, 'Confirmed'),
-('BK003', 403, 603, '2024-12-01 09:45:00', '15C', 'Economy', 180.00, 'Confirmed'),
-('BK004', 404, 604, '2024-12-05 16:20:00', '1A', 'First', 2800.00, 'Confirmed'),
-('BK005', 405, 605, '2024-12-10 11:10:00', '8D', 'Economy', 520.00, 'Confirmed');
+('BK001', 401, 601, '2024-11-15 10:30:00', '12A',
+ 'Economy', 450.00, 'Confirmed'),
+('BK002', 402, 602, '2024-11-20 14:15:00', '3B',
+ 'Business', 1200.00, 'Confirmed'),
+('BK003', 403, 603, '2024-12-01 09:45:00', '15C',
+ 'Economy', 180.00, 'Confirmed'),
+('BK004', 404, 604, '2024-12-05 16:20:00', '1A',
+ 'First', 2800.00, 'Confirmed'),
+('BK005', 405, 605, '2024-12-10 11:10:00', '8D',
+ 'Economy', 520.00, 'Confirmed');
 ```
 
 #### Maintenance Table
@@ -570,12 +643,18 @@ Tracks maintenance activities performed on aircraft for safety and compliance.
 **Values Insertion**
 
 ```sql
-INSERT INTO Maintenance (AircraftID, MaintenanceDate, MaintenanceType, Description, Cost, TechnicianName, NextMaintenanceDate) VALUES 
-(201, '2024-11-15', 'Routine', 'Engine inspection and oil change', 5500.00, 'Mike Johnson', '2025-02-15'),
-(202, '2024-12-01', 'Repair', 'Landing gear hydraulic system repair', 12000.00, 'Sarah Davis', '2025-03-01'),
-(203, '2024-10-20', 'Major Overhaul', 'Complete engine overhaul', 85000.00, 'Robert Chen', '2025-04-20'),
-(204, '2024-11-28', 'Routine', 'Avionics system check', 3200.00, 'Lisa Park', '2025-02-28'),
-(205, '2024-12-10', 'Inspection', 'Annual safety inspection', 8500.00, 'David Wilson', '2025-12-10');
+INSERT INTO Maintenance (AircraftID, MaintenanceDate, MaintenanceType,
+ Description, Cost, TechnicianName, NextMaintenanceDate) VALUES 
+(201, '2024-11-15', 'Routine', 'Engine inspection and oil change',
+ 5500.00, 'Mike Johnson', '2025-02-15'),
+(202, '2024-12-01', 'Repair', 'Landing gear hydraulic system repair',
+ 12000.00, 'Sarah Davis', '2025-03-01'),
+(203, '2024-10-20', 'Major Overhaul', 'Complete engine overhaul',
+ 85000.00, 'Robert Chen', '2025-04-20'),
+(204, '2024-11-28', 'Routine', 'Avionics system check',
+ 3200.00, 'Lisa Park', '2025-02-28'),
+(205, '2024-12-10', 'Inspection', 'Annual safety inspection',
+ 8500.00, 'David Wilson', '2025-12-10');
 ```
 
 #### Luggage Table
@@ -584,12 +663,12 @@ INSERT INTO Maintenance (AircraftID, MaintenanceDate, MaintenanceType, Descripti
 
 ```sql
 CREATE TABLE Luggage (
-    LuggageID SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     BookingID VARCHAR(10) NOT NULL,
     PassengerID SMALLINT UNSIGNED NOT NULL,
     Weight DECIMAL(5,2) NOT NULL,
     LuggageType VARCHAR(20) NOT NULL,
     SpecialHandling VARCHAR(100),
+    PRIMARY KEY (PassengerID, BookingID),
     FOREIGN KEY (BookingID) REFERENCES Booking(BookingID) 
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID) 
@@ -601,7 +680,6 @@ CREATE TABLE Luggage (
 **Table Description**
 Tracks luggage items associated with passenger bookings.
 
-- **LuggageID**: Unique luggage identifier
 - **BookingID**: Associated booking reference
 - **PassengerID**: Passenger who owns the luggage
 - **Weight**: Luggage weight in kilograms
@@ -690,11 +768,16 @@ ORDER BY
 ```
 
 ```
-('John Anderson', '555-111-2222', 'john.anderson@email.com', 'AA101', '12A', 'Economy', 450, '2024-12-20 08:00:00', '2024-12-20 14:00:00')
-('Lisa Wang', '555-222-3333', 'lisa.wang@email.com', 'AA102', '3B', 'Business', 1200, '2024-12-21 15:30:00', '2024-12-22 03:00:00')
-('Pierre Dubois', '555-333-4444', 'pierre.dubois@email.com', 'AA103', '15C', 'Economy', 180, '2024-12-22 09:15:00', '2024-12-22 10:30:00')
-('Emma Thompson', '555-444-5555', 'emma.thompson@email.com', 'AA104', '1A', 'First', 2800, '2024-12-23 11:00:00', '2024-12-24 23:45:00')
-('Carlos Rivera', '555-555-6666', 'carlos.rivera@email.com', 'AA105', '8D', 'Economy', 520, '2024-12-24 20:30:00', '2024-12-25 04:00:00')
+('John Anderson', '555-111-2222', 'john.anderson@email.com', 'AA101',
+ '12A', 'Economy', 450, '2024-12-20 08:00:00', '2024-12-20 14:00:00')
+('Lisa Wang', '555-222-3333', 'lisa.wang@email.com', 'AA102',
+ '3B', 'Business', 1200, '2024-12-21 15:30:00', '2024-12-22 03:00:00')
+('Pierre Dubois', '555-333-4444', 'pierre.dubois@email.com', 'AA103',
+ '15C', 'Economy', 180, '2024-12-22 09:15:00', '2024-12-22 10:30:00')
+('Emma Thompson', '555-444-5555', 'emma.thompson@email.com', 'AA104',
+ '1A', 'First', 2800, '2024-12-23 11:00:00', '2024-12-24 23:45:00')
+('Carlos Rivera', '555-555-6666', 'carlos.rivera@email.com', 'AA105',
+ '8D', 'Economy', 520, '2024-12-24 20:30:00', '2024-12-25 04:00:00')
 ```
 
 #### 2. Aircraft Maintenance Status and Costs
@@ -720,11 +803,16 @@ ORDER BY
 ```
 
 ```
-('Airbus A320', 'Airbus', 'Active', '2024-12-01', 'Repair', 12000, 'Sarah Davis', '2025-03-01')
-('Airbus A330', 'Airbus', 'Active', '2024-11-28', 'Routine', 3200, 'Lisa Park', '2025-02-28')
-('Boeing 737-800', 'Boeing', 'Active', '2024-11-15', 'Routine', 5500, 'Mike Johnson', '2025-02-15')
-('Boeing 777-200', 'Boeing', 'Maintenance', '2024-10-20', 'Major Overhaul', 85000, 'Robert Chen', '2025-04-20')
-('Boeing 787-9', 'Boeing', 'Active', '2024-12-10', 'Inspection', 8500, 'David Wilson', '2025-12-10')
+('Airbus A320', 'Airbus', 'Active', '2024-12-01',
+ 'Repair', 12000, 'Sarah Davis', '2025-03-01')
+('Airbus A330', 'Airbus', 'Active', '2024-11-28',
+ 'Routine', 3200, 'Lisa Park', '2025-02-28')
+('Boeing 737-800', 'Boeing', 'Active', '2024-11-15',
+ 'Routine', 5500, 'Mike Johnson', '2025-02-15')
+('Boeing 777-200', 'Boeing', 'Maintenance', '2024-10-20',
+ 'Major Overhaul', 85000, 'Robert Chen', '2025-04-20')
+('Boeing 787-9', 'Boeing', 'Active', '2024-12-10',
+ 'Inspection', 8500, 'David Wilson', '2025-12-10')
 ```
 
 #### 3. Flights and Crew Assignments
@@ -749,16 +837,36 @@ ORDER BY
 ```
 
 ```
-('AA101', '2024-12-20 08:00:00', '2024-12-20 14:00:00', 'Captain James Mitchell', 'Captain', '555-123-4567', 'j.mitchell@airline.com')
-('AA101', '2024-12-20 08:00:00', '2024-12-20 14:00:00', 'First Officer Sarah Chen', 'First Officer', '555-234-5678', 's.chen@airline.com')
-('AA101', '2024-12-20 08:00:00', '2024-12-20 14:00:00', 'Flight Attendant Maria Rodriguez', 'Senior Flight Attendant', '555-345-6789', 'm.rodriguez@airline.com')
-('AA102', '2024-12-21 15:30:00', '2024-12-22 03:00:00', 'Captain Robert Wilson', 'Captain', '555-456-7890', 'r.wilson@airline.com')
-('AA102', '2024-12-21 15:30:00', '2024-12-22 03:00:00', 'Flight Attendant Kevin Park', 'Flight Attendant', '555-567-8901', 'k.park@airline.com')
-('AA103', '2024-12-22 09:15:00', '2024-12-22 10:30:00', 'Captain James Mitchell', 'Captain', '555-123-4567', 'j.mitchell@airline.com')
-('AA103', '2024-12-22 09:15:00', '2024-12-22 10:30:00', 'Flight Attendant Maria Rodriguez', 'Senior Flight Attendant', '555-345-6789', 'm.rodriguez@airline.com')
-('AA104', '2024-12-23 11:00:00', '2024-12-24 23:45:00', 'First Officer Sarah Chen', 'First Officer', '555-234-5678', 's.chen@airline.com')
-('AA104', '2024-12-23 11:00:00', '2024-12-24 23:45:00', 'Flight Attendant Kevin Park', 'Flight Attendant', '555-567-8901', 'k.park@airline.com')
-('AA105', '2024-12-24 20:30:00', '2024-12-25 04:00:00', 'Captain Robert Wilson', 'Captain', '555-456-7890', 'r.wilson@airline.com')
+('AA101', '2024-12-20 08:00:00', '2024-12-20 14:00:00',
+ 'Captain James Mitchell', 'Captain',
+ '555-123-4567', 'j.mitchell@airline.com')
+('AA101', '2024-12-20 08:00:00', '2024-12-20 14:00:00',
+ 'First Officer Sarah Chen', 'First Officer',
+ '555-234-5678', 's.chen@airline.com')
+('AA101', '2024-12-20 08:00:00', '2024-12-20 14:00:00',
+ 'Flight Attendant Maria Rodriguez', 'Senior Flight Attendant',
+ '555-345-6789', 'm.rodriguez@airline.com')
+('AA102', '2024-12-21 15:30:00', '2024-12-22 03:00:00',
+ 'Captain Robert Wilson', 'Captain',
+ '555-456-7890', 'r.wilson@airline.com')
+('AA102', '2024-12-21 15:30:00', '2024-12-22 03:00:00',
+ 'Flight Attendant Kevin Park', 'Flight Attendant',
+ '555-567-8901', 'k.park@airline.com')
+('AA103', '2024-12-22 09:15:00', '2024-12-22 10:30:00',
+ 'Captain James Mitchell', 'Captain',
+ '555-123-4567', 'j.mitchell@airline.com')
+('AA103', '2024-12-22 09:15:00', '2024-12-22 10:30:00',
+ 'Flight Attendant Maria Rodriguez', 'Senior Flight Attendant',
+ '555-345-6789', 'm.rodriguez@airline.com')
+('AA104', '2024-12-23 11:00:00', '2024-12-24 23:45:00',
+ 'First Officer Sarah Chen', 'First Officer',
+ '555-234-5678', 's.chen@airline.com')
+('AA104', '2024-12-23 11:00:00', '2024-12-24 23:45:00',
+ 'Flight Attendant Kevin Park', 'Flight Attendant',
+ '555-567-8901', 'k.park@airline.com')
+('AA105', '2024-12-24 20:30:00', '2024-12-25 04:00:00',
+ 'Captain Robert Wilson', 'Captain',
+ '555-456-7890', 'r.wilson@airline.com')
 ```
 #### 4. Pilots' Flight Hours and Aircraft Type Ratings
 The flight operations department wants to track pilots' total flight hours and their certified aircraft type ratings for training and assignment purposes.
@@ -778,9 +886,12 @@ ORDER BY
 ```
 
 ```
-('Captain Robert Wilson', 'ATP-456789123', 12000, 'Boeing 737, Boeing 777, Boeing 787', '2024-05-10')
-('Captain James Mitchell', 'ATP-123456789', 8500, 'Boeing 737, Boeing 777', '2024-06-15')
-('First Officer Sarah Chen', 'CPL-987654321', 3200, 'Airbus A320, Airbus A330', '2024-08-20')
+('Captain Robert Wilson', 'ATP-456789123', 12000, 'Boeing 737, Boeing 777, Boeing 787',
+ '2024-05-10')
+('Captain James Mitchell', 'ATP-123456789', 8500, 'Boeing 737, Boeing 777',
+ '2024-06-15')
+('First Officer Sarah Chen', 'CPL-987654321', 3200, 'Airbus A320, Airbus A330',
+ '2024-08-20')
 ```
 #### 5. Passenger Luggage Details for a Specific Flight
 For flight operations and baggage handling, we need to quickly retrieve all luggage details for passengers on a specific flight, including weight and special handling notes.
@@ -788,7 +899,6 @@ For flight operations and baggage handling, we need to quickly retrieve all lugg
 SELECT
     p.FullName AS PassengerName,
     b.BookingID,
-    l.LuggageID,
     l.Weight,
     l.LuggageType,
     l.SpecialHandling,
@@ -804,7 +914,7 @@ JOIN
 WHERE
     f.FlightNumber = 'AA101' -- Example: replace with desired FlightNumber
 ORDER BY
-    p.FullName, l.LuggageID;
+    p.FullName, l.BookingID, l.PassengerID;
 ```
 
 ```
@@ -854,8 +964,10 @@ ORDER BY
 ```
 
 ```
-('AA101', 'John F. Kennedy International Airport', '06:00:00', '2024-12-20 08:00:00', '2024-12-20 14:00:00', 'Scheduled')
-('AA105', 'John F. Kennedy International Airport', '07:30:00', '2024-12-24 20:30:00', '2024-12-25 04:00:00', 'Delayed')
+('AA101', 'John F. Kennedy International Airport', '06:00:00',
+ '2024-12-20 08:00:00', '2024-12-20 14:00:00', 'Scheduled')
+('AA105', 'John F. Kennedy International Airport', '07:30:00',
+ '2024-12-24 20:30:00', '2024-12-25 04:00:00', 'Delayed')
 ```
 #### 8. Aircraft with Pending Maintenance or Recent Major Overhauls
 The engineering department wants to identify aircraft that are either due for maintenance or have recently undergone major overhauls.
@@ -879,7 +991,8 @@ ORDER BY
 ```
 
 ```
-(203, 'Boeing 777-200', 'Boeing', 'Maintenance', '2024-10-20', 'Major Overhaul', '2025-04-20')
+(203, 'Boeing 777-200', 'Boeing', 'Maintenance', 
+'2024-10-20', 'Major Overhaul', '2025-04-20')
 ```
 #### 9. Crew Members Assigned to Multiple Flights
 To optimize crew scheduling, we need to identify crew members who are assigned to more than one flight within a specific period.
@@ -893,7 +1006,8 @@ FROM
 JOIN
     FlightCrew fc ON cm.CrewMemberID = fc.CrewMemberID
 WHERE
-    fc.FlightID IN (SELECT FlightID FROM Flight WHERE DepartureTime BETWEEN '2024-12-20' AND '2024-12-25') -- Example: adjust date range
+    fc.FlightID IN (SELECT FlightID FROM Flight WHERE
+	DepartureTime BETWEEN '2024-12-20' AND '2024-12-25') -- Example: adjust date range
 GROUP BY
     cm.CrewMemberID, cm.FullName, cm.Position
 HAVING

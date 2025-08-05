@@ -17,6 +17,29 @@ INSERT INTO Airport VALUES
 (104, 'Charles de Gaulle Airport', 'Paris', 'France', 'CDG', 'CET'),
 (105, 'Tokyo Haneda Airport', 'Tokyo', 'Japan', 'HND', 'JST');
 
+
+CREATE TABLE Airline (
+    AirlineID SMALLINT UNSIGNED PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    Address VARCHAR(100) NOT NULL
+);
+
+
+INSERT INTO Airline (AirlineID, Name, Address) VALUES 
+(1, 'American Airlines', '1 Skyview Dr, Fort Worth, TX 76155'),
+(2, 'Delta Air Lines', '1030 Delta Blvd, Atlanta, GA 30354'),
+(3, 'United Airlines', '233 S. Wacker Dr, Chicago, IL 60606'),
+(4, 'Southwest Airlines', '2702 Love Field Dr, Dallas, TX 75235'),
+(5, 'JetBlue Airways', '27-01 Queens Plaza N, Long Island City, NY 11101'),
+(6, 'Alaska Airlines', '19300 International Blvd, Seattle, WA 98188'),
+(7, 'Spirit Airlines', '2800 Executive Way, Miramar, FL 33025'),
+(8, 'Frontier Airlines', '4545 Airport Way, Denver, CO 80239'),
+(9, 'Allegiant Air', '1201 N Town Center Dr, Las Vegas, NV 89144'),
+(10, 'Hawaiian Airlines', '3375 Koapaka St, Honolulu, HI 96819');
+
+
+
+
 CREATE TABLE CrewMember (
     CrewMemberID INTEGER PRIMARY KEY,
     FullName TEXT NOT NULL,
@@ -68,21 +91,23 @@ INSERT INTO Pilot VALUES
 
 
 CREATE TABLE Aircraft (
-    AircraftID INTEGER PRIMARY KEY,
-    Model TEXT NOT NULL,
-    Manufacturer TEXT NOT NULL,
-    Capacity INTEGER NOT NULL,
-    Status TEXT NOT NULL,
-    LastMaintenanceDate TEXT,
-    YearManufactured INTEGER NOT NULL
+    AircraftID SMALLINT UNSIGNED PRIMARY KEY,
+    Model VARCHAR(50) NOT NULL,
+    Manufacturer VARCHAR(50) NOT NULL,
+    Capacity SMALLINT UNSIGNED NOT NULL,
+    Status VARCHAR(20) NOT NULL,
+    LastMaintenanceDate DATE,
+    YearManufactured YEAR NOT NULL,
+    AirlineID SMALLINT UNSIGNED,
+    FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID)
 );
 
-INSERT INTO Aircraft VALUES
-(201, 'Boeing 737-800', 'Boeing', 162, 'Active', '2024-11-15', 2018),
-(202, 'Airbus A320', 'Airbus', 156, 'Active', '2024-12-01', 2019),
-(203, 'Boeing 777-200', 'Boeing', 314, 'Maintenance', '2024-10-20', 2017),
-(204, 'Airbus A330', 'Airbus', 277, 'Active', '2024-11-28', 2020),
-(205, 'Boeing 787-9', 'Boeing', 290, 'Active', '2024-12-10', 2021);
+INSERT INTO Aircraft VALUES 
+(201, 'Boeing 737-800', 'Boeing', 162, 'Active', '2024-11-15', 2018, 1),
+(202, 'Airbus A320', 'Airbus', 156, 'Active', '2024-12-01', 2019, 2),
+(203, 'Boeing 777-200', 'Boeing', 314, 'Maintenance', '2024-10-20', 2017, 1),
+(204, 'Airbus A330', 'Airbus', 277, 'Active', '2024-11-28', 2020, 3),
+(205, 'Boeing 787-9', 'Boeing', 290, 'Active', '2024-12-10', 2021, 2);
 
 
 CREATE TABLE FlightAttendant (
@@ -126,23 +151,31 @@ CREATE TABLE Flight (
     FlightNumber VARCHAR(10) NOT NULL UNIQUE,
     AircraftID SMALLINT UNSIGNED NOT NULL,
     RouteID SMALLINT UNSIGNED NOT NULL,
+    AirlineID SMALLINT UNSIGNED NOT NULL,
     DepartureTime DATETIME NOT NULL,
     ArrivalTime DATETIME NOT NULL,
     Status VARCHAR(20) NOT NULL DEFAULT 'Scheduled',
     GateNumber VARCHAR(5),
-    FOREIGN KEY (AircraftID) REFERENCES Aircraft(AircraftID)
+    FOREIGN KEY (AircraftID) REFERENCES Aircraft(AircraftID) 
         ON DELETE RESTRICT ON UPDATE CASCADE,
-    FOREIGN KEY (RouteID) REFERENCES Route(RouteID)
+    FOREIGN KEY (RouteID) REFERENCES Route(RouteID) 
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID)
         ON DELETE RESTRICT ON UPDATE CASCADE,
     CHECK (ArrivalTime > DepartureTime)
 );
 
-INSERT INTO Flight VALUES
-(601, 'AA101', 201, 501, '2024-12-20 08:00:00', '2024-12-20 14:00:00', 'Scheduled', 'A12'),
-(602, 'AA102', 202, 502, '2024-12-21 15:30:00', '2024-12-22 03:00:00', 'Scheduled', 'B7'),
-(603, 'AA103', 204, 503, '2024-12-22 09:15:00', '2024-12-22 10:30:00', 'Scheduled', 'C3'),
-(604, 'AA104', 205, 504, '2024-12-23 11:00:00', '2024-12-24 23:45:00', 'Scheduled', 'D15'),
-(605, 'AA105', 203, 505, '2024-12-24 20:30:00', '2024-12-25 04:00:00', 'Delayed', 'A8');
+INSERT INTO Flight VALUES 
+(601, 'AA101', 201, 501, 1, '2024-12-20 08:00:00',
+ '2024-12-20 14:00:00', 'Scheduled', 'A12'),
+(602, 'DL202', 202, 502, 2, '2024-12-21 15:30:00',
+ '2024-12-22 03:00:00', 'Scheduled', 'B7'),
+(603, 'UA303', 204, 503, 3, '2024-12-22 09:15:00',
+ '2024-12-22 10:30:00', 'Scheduled', 'C3'),
+(604, 'SW404', 205, 504, 4, '2024-12-23 11:00:00',
+ '2024-12-24 23:45:00', 'Scheduled', 'D15'),
+(605, 'JB505', 203, 505, 5, '2024-12-24 20:30:00',
+ '2024-12-25 04:00:00', 'Delayed', 'A8');
 
 CREATE TABLE Booking (
     BookingID VARCHAR(10) PRIMARY KEY,
@@ -189,20 +222,20 @@ INSERT INTO Maintenance (AircraftID, MaintenanceDate, MaintenanceType, Descripti
 (205, '2024-12-10', 'Inspection', 'Annual safety inspection', 8500.00, 'David Wilson', '2025-12-10');
 
 CREATE TABLE Luggage (
-    LuggageID SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     BookingID VARCHAR(10) NOT NULL,
     PassengerID SMALLINT UNSIGNED NOT NULL,
     Weight DECIMAL(5,2) NOT NULL,
     LuggageType VARCHAR(20) NOT NULL,
     SpecialHandling VARCHAR(100),
-    FOREIGN KEY (BookingID) REFERENCES Booking(BookingID)
+    PRIMARY KEY (PassengerID, BookingID),
+    FOREIGN KEY (BookingID) REFERENCES Booking(BookingID) 
         ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID)
+    FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID) 
         ON DELETE CASCADE ON UPDATE CASCADE,
     CHECK (Weight > 0)
 );
 
-INSERT INTO Luggage (BookingID, PassengerID, Weight, LuggageType, SpecialHandling) VALUES
+INSERT INTO Luggage (BookingID, PassengerID, Weight, LuggageType, SpecialHandling) VALUES 
 ('BK001', 401, 23.5, 'Checked', NULL),
 ('BK001', 401, 7.2, 'Carry-on', NULL),
 ('BK002', 402, 18.3, 'Checked', 'Fragile Items'),
