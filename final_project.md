@@ -1050,4 +1050,4 @@ LIMIT 3;
 ('BK005', 'Carlos Rivera', 'AA105', 'Economy', 520, '2024-12-10 11:10:00')
 ```
 ### REVERSE ENGINEERING DIAGRAM
-![alt text](red.png "Reverse Engineering Diagram")
+![alt text](Reverse_Engineered_Diagram_Revised.png "Reverse Engineering Diagram")
